@@ -339,13 +339,13 @@ def delete_todo(db: Session, todo_id: int, user_id: int) -> bool:
 # ==================== TAGS ====================
 
 def get_user_tags(db: Session, user_id: int) -> List[Tag]:
-	return db.query(Tag).filter(Tag.created_by == user_id).all()
+	return db.query(Tag).filter(Tag.user_id == user_id).all()
 
 
 def create_tag(db: Session, tag_data: schemas.TagCreate, user_id: int) -> Tag:
 	existing = db.query(Tag).filter(
 		Tag.name == tag_data.name,
-		Tag.created_by == user_id
+		Tag.user_id == user_id
 	).first()
 	
 	if existing:
@@ -357,7 +357,7 @@ def create_tag(db: Session, tag_data: schemas.TagCreate, user_id: int) -> Tag:
 	db_tag = Tag(
 		name=tag_data.name,
 		color=tag_data.color,
-		created_by=user_id
+		user_id=user_id
 	)
 	db.add(db_tag)
 	db.commit()
@@ -374,7 +374,7 @@ def update_tag(db: Session, tag_id: int, tag_data: schemas.TagUpdate, user_id: i
 			detail="Tag not found"
 		)
 	
-	if tag.created_by != user_id:
+	if tag.user_id != user_id:
 		raise HTTPException(
 			status_code=status.HTTP_403_FORBIDDEN,
 			detail="You do not have permission to modify this tag"
@@ -399,7 +399,7 @@ def delete_tag(db: Session, tag_id: int, user_id: int) -> bool:
 			detail="Tag not found"
 		)
 	
-	if tag.created_by != user_id:
+	if tag.user_id != user_id:
 		raise HTTPException(
 			status_code=status.HTTP_403_FORBIDDEN,
 			detail="You do not have permission to delete this tag"
