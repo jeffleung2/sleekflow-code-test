@@ -60,7 +60,7 @@ MIGRATIONS=(
     "20251120000003_create_todos.sql"
     "20251120000004_create_activity_logs.sql"
     "20251120000005_create_list_permissions.sql"
-    "20251120000006_create_todo_tags.sql"
+    "20251120000006_create_tags.sql"
     "20251120000007_create_todo_tags.sql"
 )
 
@@ -69,7 +69,7 @@ for migration in "${MIGRATIONS[@]}"; do
     if [ -f "$SCRIPT_DIR/$migration" ]; then
         print_info "Applying migration: $migration"
         
-        if docker-compose exec -T db psql -U postgres -d todo_db2 < "$SCRIPT_DIR/$migration"; then
+        if docker-compose exec -T db psql -U postgres -d todo_db < "$SCRIPT_DIR/$migration"; then
             print_info "✓ Successfully applied: $migration"
         else
             print_error "✗ Failed to apply: $migration"
