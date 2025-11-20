@@ -1,0 +1,15 @@
+{
+  "name": "todo-manager-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for TODO Manager real-time collaboration",
+  "main": "server.example.js",
+  "scripts": {
+    "start": "node server.example.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.2"
+  },
+  "keywords": ["websocket", "socket.io", "todo", "real-time"],
+  "author": "",
+  "license": "MIT"
+}

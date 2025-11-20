@@ -1,0 +1,133 @@
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_, func, cast, ARRAY, Text
+from typing import Optional, List
+from datetime import date
+from app.models import Todo, TodoStatus, TodoPriority
+from app.schemas import TodoCreate, TodoUpdate
+
+
+def get_todo(db: Session, todo_id: int) -> Optional[Todo]:
+    """
+    Get a single TODO by ID
+    """
+    return db.query(Todo).filter(Todo.id == todo_id).first()
+
+
+def get_todos(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[TodoStatus] = None,
+    priority: Optional[TodoPriority] = None,
+    tags: Optional[List[str]] = None,
+    due_date: Optional[date] = None,
+    due_date_from: Optional[date] = None,
+    due_date_to: Optional[date] = None,
+    sort_by: str = "due_date",
+    sort_order: str = "asc"
+) -> tuple[List[Todo], int]:
+    """
+    Get a list of TODOs with optional filtering and sorting
+    
+    Args:
+        db: Database session
+        skip: Number of records to skip (pagination)
+        limit: Maximum number of records to return
+        status: Filter by status
+        priority: Filter by priority
+        tags: Filter by tags (items with ANY of the specified tags)
+        due_date: Filter by exact due date
+        due_date_from: Filter by due date from
+        due_date_to: Filter by due date to
+        sort_by: Field to sort by (name, due_date, status, priority)
+        sort_order: Sort order (asc or desc)
+    
+    Returns:
+        Tuple of (list of todos, total count)
+    """
+    query = db.query(Todo)
+    
+    # Apply filters
+    filters = []
+    
+    if status:
+        filters.append(Todo.status == status)
+    
+    if priority:
+        filters.append(Todo.priority == priority)
+    
+    if tags:
+        # Filter todos that have ANY of the specified tags
+        # Using PostgreSQL array overlap operator &&
+        filters.append(Todo.tags.op('&&')(cast(tags, ARRAY(Text))))
+    
+    if due_date:
+        filters.append(Todo.due_date == due_date)
+    elif due_date_from and due_date_to:
+        filters.append(and_(Todo.due_date >= due_date_from, Todo.due_date <= due_date_to))
+    elif due_date_from:
+        filters.append(Todo.due_date >= due_date_from)
+    elif due_date_to:
+        filters.append(Todo.due_date <= due_date_to)
+    
+    if filters:
+        query = query.filter(and_(*filters))
+    
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply sorting
+    if sort_order.lower() == "desc":
+        query = query.order_by(getattr(Todo, sort_by).desc())
+    else:
+        query = query.order_by(getattr(Todo, sort_by).asc())
+    
+    # Apply pagination
+    todos = query.offset(skip).limit(limit).all()
+    
+    return todos, total
+
+
+def create_todo(db: Session, todo: TodoCreate) -> Todo:
+    """
+    Create a new TODO
+    """
+    db_todo = Todo(**todo.model_dump())
+    db.add(db_todo)
+    db.commit()
+    db.refresh(db_todo)
+    return db_todo
+
+
+def update_todo(db: Session, todo_id: int, todo_update: TodoUpdate) -> Optional[Todo]:
+    """
+    Update an existing TODO
+    """
+    db_todo = get_todo(db, todo_id)
+    if not db_todo:
+        return None
+    
+    # Update only provided fields
+    update_data = todo_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_todo, field, value)
+    
+    db.commit()
+    db.refresh(db_todo)
+    return db_todo
+
+
+def delete_todo(db: Session, todo_id: int) -> bool:
+    """
+    Delete a TODO
+    
+    Returns:
+        True if deleted, False if not found
+    """
+    db_todo = get_todo(db, todo_id)
+    if not db_todo:
+        return False
+    
+    db.delete(db_todo)
+    db.commit()
+    return True

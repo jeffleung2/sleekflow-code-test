@@ -1,0 +1,44 @@
+from pydantic import BaseModel, Field, ConfigDict
+from datetime import date, datetime
+from typing import Optional
+from app.models import TodoStatus, TodoPriority
+
+
+class TodoBase(BaseModel):
+    """Base schema for TODO items"""
+    name: str = Field(..., min_length=1, max_length=255, description="Name of the TODO")
+    description: Optional[str] = Field(None, description="Description of the TODO")
+    due_date: date = Field(..., description="Due date for the TODO")
+    status: TodoStatus = Field(TodoStatus.NOT_STARTED, description="Status of the TODO")
+    priority: TodoPriority = Field(TodoPriority.MEDIUM, description="Priority of the TODO")
+    tags: list[str] = Field(default_factory=list, description="Tags associated with the TODO")
+
+
+class TodoCreate(TodoBase):
+    """Schema for creating a new TODO"""
+    pass
+
+
+class TodoUpdate(BaseModel):
+    """Schema for updating an existing TODO"""
+    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Name of the TODO")
+    description: Optional[str] = Field(None, description="Description of the TODO")
+    due_date: Optional[date] = Field(None, description="Due date for the TODO")
+    status: Optional[TodoStatus] = Field(None, description="Status of the TODO")
+    priority: Optional[TodoPriority] = Field(None, description="Priority of the TODO")
+    tags: Optional[list[str]] = Field(None, description="Tags associated with the TODO")
+
+
+class TodoResponse(TodoBase):
+    """Schema for TODO response"""
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TodoListResponse(BaseModel):
+    """Schema for list of TODOs with pagination info"""
+    total: int
+    items: list[TodoResponse]
