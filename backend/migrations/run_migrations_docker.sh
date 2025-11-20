@@ -30,7 +30,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 print_info "Checking if Docker containers are running..."
 cd "$SCRIPT_DIR/../.."
 
-if ! docker-compose ps | grep -q "sleekflow-db"; then
+if ! docker-compose ps | grep -q "sleekflow2-db"; then
     print_error "Docker containers are not running. Please run 'docker-compose up -d' first."
     exit 1
 fi
@@ -55,12 +55,13 @@ print_info "Running database migrations..."
 
 # Migration files to run (in order)
 MIGRATIONS=(
-    "20251120000001_create_user.sql",
-    "20251120000002_create_todo_list.sql",
-    "20251120000003_create_todos.sql",
-    "20251120000004_create_activity_logs.sql",
-    "20251120000005_create_list_permissions.sql",
+    "20251120000001_create_user.sql"
+    "20251120000002_create_todo_list.sql"
+    "20251120000003_create_todos.sql"
+    "20251120000004_create_activity_logs.sql"
+    "20251120000005_create_list_permissions.sql"
     "20251120000006_create_todo_tags.sql"
+    "20251120000007_create_todo_tags.sql"
 )
 
 FAILED=0
@@ -68,7 +69,7 @@ for migration in "${MIGRATIONS[@]}"; do
     if [ -f "$SCRIPT_DIR/$migration" ]; then
         print_info "Applying migration: $migration"
         
-        if docker-compose exec -T db psql -U postgres -d todo_db < "$SCRIPT_DIR/$migration"; then
+        if docker-compose exec -T db psql -U postgres -d todo_db2 < "$SCRIPT_DIR/$migration"; then
             print_info "✓ Successfully applied: $migration"
         else
             print_error "✗ Failed to apply: $migration"
