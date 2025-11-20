@@ -24,8 +24,8 @@ docker-compose up -d
 
 2. Access the application:
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
+   - Backend API: http://localhost:8080
+   - API Documentation: http://localhost:8080/docs
    - Database: localhost:5432
 
 3. View logs:
@@ -113,7 +113,7 @@ docker stats
 - Check logs: `docker-compose logs db`
 
 **Port conflicts:**
-- Ensure ports 5432, 8000, and 5173 are not in use
+- Ensure ports 5432, 8080, and 5173 are not in use
 - Modify port mappings in docker-compose.yml if needed
 
 **Build failures:**
